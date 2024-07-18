@@ -7,11 +7,12 @@ import numpy as np
 import torch
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import transforms
-from model.network import CoCoReco
+from model.network import CoCoReco, ResNet18
 from sklearn.metrics import classification_report, roc_auc_score
 import argparse
 
 import time
+from tqdm import tqdm
 
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
@@ -55,15 +56,18 @@ def kill_process(filename: str, holdpid: int):
             os.kill(int(idname), signal.SIGKILL)
     return idlist
 
+best_Acc=0
+best_F1=0
+best_AUC=0
+
 def main(rank, world_size, args):
     
-    print(f'MAIN | Distributed init, rank: {rank}, (worldsize: {world_size}), is CUDA available:{torch.cuda.is_available()}): {args.dist_url}')
+    print(f'MAIN | Distributed init, rank: {rank}, (worldsize: {world_size}), is CUDA available:{torch.cuda.is_available()})')
 
     if rank==0: print("Starting init_process_group. The main worker is rank 0.")
     
     # Initialize distributed training
     torch.distributed.init_process_group(backend='nccl',
-                                        init_method=args.dist_url,
                                         world_size=world_size,
                                         rank=rank)
     if rank==0: print("Init_process_group, done.")
@@ -93,7 +97,7 @@ def main(rank, world_size, args):
     
     # Define the transformation for the input images
     transform = transforms.Compose([
-        transforms.Resize((160, 160)),
+        transforms.Resize((168, 168)),
         transforms.ToTensor(),
     ])
 
@@ -104,8 +108,9 @@ def main(rank, world_size, args):
         ])
 
     # Load the Imagenette dataset
-    train_dataset = ImageFolder('/path/to/train/dataset', transform=transform)
-    val_dataset = ImageFolder('/path/to/validation/dataset', transform=transform)
+    path_to_data = '/leonardo_work/IscrC_CAFE/ECCV2024/imagenette2-160'
+    train_dataset = ImageFolder(os.path.join(path_to_data,'train'), transform=transform)
+    val_dataset = ImageFolder(os.path.join(path_to_data,'val'), transform=transform)
 
     # Create data samplers for distributed training
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, num_replicas=world_size, rank=rank,shuffle=True, drop_last=False)
@@ -127,7 +132,8 @@ def main(rank, world_size, args):
     # Set the device to CUDA
     device = torch.device("cuda")
     # Initialize the model
-    model = CoCoReco(num_classes=num_classes).to(device)
+    # model = CoCoReco(num_classes=num_classes).to(device)
+    model = ResNet18(num_classes=num_classes).to(device)
 
     # Wrap the model in the DistributedDataParallel (DDP) module, providing the ID of available device and ID of output device both to the current (local) rank
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank], output_device=local_rank, broadcast_buffers=False, find_unused_parameters=True)
@@ -145,12 +151,17 @@ def main(rank, world_size, args):
         torch.cuda.empty_cache() 
 
         model.train()
-        for images, labels in train_loader:
+        for images, labels in tqdm(train_loader):
             images = images.to(device)
             labels = labels.to(device)
+            # print(f"labels: {labels.shape}")
+            # print(f"images: {images.shape}")
 
             # Forward pass
-            outputs = model(images)
+            outputs = model(images)           
+           
+            # print(f"outputs: {outputs.shape}")
+
             loss = criterion(outputs, labels)
 
             # Backward and optimize
@@ -169,6 +180,8 @@ def main(rank, world_size, args):
                 total_samples = 0
                 predicted_labels = []
                 true_labels = []
+                predicted_probabilities = []
+
                 for images, labels in val_loader:
                     images = images.to(device)
                     labels = labels.to(device)
@@ -182,15 +195,26 @@ def main(rank, world_size, args):
                     predicted_labels.extend(predicted.tolist())
                     true_labels.extend(labels.tolist())
 
-                accuracy = 100 * total_correct / total_samples
-                f1_score = classification_report(true_labels, predicted_labels)
-                roc_auc = roc_auc_score(true_labels, predicted_labels)
+                    prob = nn.functional.softmax(outputs, dim=1)
+                    predicted_probabilities.extend(prob.tolist())
 
-                print(f'Epoch [{epoch+1}/{num_epochs}], Validation Accuracy: {accuracy:.2f}%')
-                print(f'Epoch [{epoch+1}/{num_epochs}], F1 Score: {f1_score}')
-                print(f'Epoch [{epoch+1}/{num_epochs}], ROC AUC Score: {roc_auc}')
+                accuracy = 100 * total_correct / total_samples
+
+                report = classification_report(true_labels, predicted_labels, output_dict=True, target_names=['chainsaw','church','englishSpringerDog','frenchHorn','garbageTruck','gasPump','golfBall','musicCassette','parachute','tenchFish'])
+                
+
+                accuracy=report['accuracy']
+                # precision =  report['macro avg']['precision'] 
+                # recall = report['macro avg']['recall']    
+                f1_score = report['macro avg']['f1-score']
+
+                roc_auc = roc_auc_score(true_labels, predicted_probabilities, multi_class='ovr')               
+                print(f'Epoch [{epoch+1}/{num_epochs}], ROC AUC Score (ovr): {roc_auc}')
 
                 if (accuracy > best_Acc) and (f1_score > best_F1) and (roc_auc > best_AUC):
+                    print(f'Epoch [{epoch+1}/{num_epochs}], classification report:\n')
+                    print(report)
+
                     # this is the best global model, achieve the best accuracy, F1 score and ROC AUC score
 
                     #update the best values
@@ -203,14 +227,19 @@ def main(rank, world_size, args):
                     # save the best global model, only rank 0 saves the model
                     if dist.get_rank() == 0:
                         torch.save(model.state_dict(), os.path.join(args.output, 'bestGlobal.pth.tar'))
+                        print("Saved best global pth model")
                 elif accuracy > best_Acc:
+                    print(f'Epoch [{epoch+1}/{num_epochs}], classification report:\n')
+                    print(report)
+
                     best_Acc = accuracy
-                    if dist.get_rank() == 0:
+                    if dist.get_rank() == 0:                        
                         torch.save(model.state_dict(), os.path.join(args.output, 'bestAccur.pth.tar'))
+                        print("Saved pth model with better accuracy")
 
                 if best_epoch >= 0 and (epoch - best_epoch) >= 8:
                     print("Difference between epoch - best_epoch = {}, stop!".format(epoch - best_epoch))
-                    if dist.get_rank() == 0 and args.kill_stop:
+                    if dist.get_rank() == 0:
                         filename = sys.argv[0].split(' ')[0].strip()
                         killedlist = kill_process(filename, os.getpid())
                         print("Kill all process of {}: ".format(filename) + " ".join(killedlist))
