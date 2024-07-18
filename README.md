@@ -9,3 +9,5 @@ You can find additional information on this dataset at [this page](https://githu
 wget https://s3.amazonaws.com/fast-ai-imageclas/imagenette2-160.tgz
 ```
 
+## Code
+To get started with the coding, you can easily utilize our SLURM 'sbatch' submission file, slurm_submit.x. In case you find issuer related to the Dos2Unix conversion (when a file is created on Windows and used in Linux systems), you can easily convert it with this [online tool](https://toolslick.com/conversion/text/dos-to-unix).
