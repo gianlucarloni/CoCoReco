@@ -10,10 +10,10 @@ You can easily utilize our SLURM 'sbatch' submission file, [slurm_submit.x](http
 
 ### CoCoReco
 In [network.py](https://github.com/gianlucarloni/CoCoReco-ECCV2024/blob/main/model/network.py), you can find our novel **CoCoReco model**, depicted in this figure:
-<img src="./readme_images/cocoreco.pdf" width=300>
+<img src="./readme_images/cocoreco" width=300>
 
 In addition, [network.py](https://github.com/gianlucarloni/CoCoReco-ECCV2024/blob/main/model/network.py) includes our proposed the **Contextual Attention Block (CAB)**, which infers weights that multiply the feature maps according to their causal influence on the scene, modeling the co-occurrence of different objects in the image. 
-<img src="./readme_images/CAB-module.pdf" width=300>
+<img src="./readme_images/CAB-module" width=300>
 
 
 In case you find any issues related to the Dos2Unix conversion (when a file is created on Windows and used in Linux systems), you can easily convert it with this [online tool](https://toolslick.com/conversion/text/dos-to-unix).
