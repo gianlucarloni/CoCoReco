@@ -5,16 +5,6 @@ import torch.nn as nn
 import torchvision.models as models
 import torch.nn.functional as F
 
-# class ResNet18(nn.Module):
-#     def __init__(self, num_classes=10):
-#         super(ResNet18, self).__init__()
-#         self.resnet = models.resnet18(pretrained=False)
-#         self.resnet.fc = nn.Linear(512, num_classes)
-
-#     def forward(self, x):
-#         x = self.resnet(x)
-#         return x
-
 ##### Some utility classes ####################################################################
 class STEFunction(torch.autograd.Function):
     '''
@@ -116,7 +106,7 @@ class CausalityFactorsExtractor(nn.Module):
 
         By leveraging algaebric transformations and torch functions, we efficiently extracts the causality factors with few lines of code.
 
-        In this implementation, we modify the final values of the causality factors by applying a sigmoid function to scale them between 0 and 1.
+        In this implementation, we scale the values of the causality factors between 0 and 1.
         '''
         triu = torch.triu(causality_maps, 1) #upper triangular matrx (excluding the principal diagonal)
         tril = torch.tril(causality_maps, -1).permute((0,2,1)).contiguous() #lower triangular matrx  (excluding the principal diagonal), transposed for easier elementwise computation with the upper
@@ -149,6 +139,7 @@ class CausalityFactorsExtractor(nn.Module):
 ###### CoCoReco ####################################################################
 
 class WeightedFeatureProjection(nn.Module):
+    # This is our (learnable) skip connection to emulate extensive afferent end efferent connections of human visual areas. The modulation weight is biologically motivated by recent connectome studies.
     def __init__(self, n_features_desired, n_features_incoming, direction, output_size, weight = 0.10):
         super(WeightedFeatureProjection, self).__init__()
         if n_features_incoming == n_features_desired:
