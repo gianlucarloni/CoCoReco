@@ -8,14 +8,13 @@ The aim of this paper is threefold. We inform the AI practitioner about the huma
 ### Get started with the coding!
 You can easily utilize our SLURM 'sbatch' submission file, [slurm_submit.x](https://github.com/gianlucarloni/CoCoReco-ECCV2024/blob/main/slurm_submit.x). That file sets some variables and launches the Python/Pytorch training script, [train.py](https://github.com/gianlucarloni/CoCoReco-ECCV2024/blob/main/train.py).
 
-### CoCoReco
-In [network.py](https://github.com/gianlucarloni/CoCoReco-ECCV2024/blob/main/model/network.py), you can find our novel **CoCoReco model**, depicted in this figure:
+In [network.py](https://github.com/gianlucarloni/CoCoReco-ECCV2024/blob/main/model/network.py), you can find our novel **Connectivity-inspired Context-aware Recognition (CoCoReco) model, depicted in this figure:
 
 <img src="./readme_images/cocoreco.png" width=1200>
 
 In addition, [network.py](https://github.com/gianlucarloni/CoCoReco-ECCV2024/blob/main/model/network.py) includes our proposed the **Contextual Attention Block (CAB)**, which infers weights that multiply the feature maps according to their causal influence on the scene, modeling the co-occurrence of different objects in the image:
 
-<img src="./readme_images/CAB-module.png" width=1200>
+<img src="./readme_images/CAB-module.png" width=863>
 
 
 In case you find any issues related to the Dos2Unix conversion (when a file is created on Windows and used in Linux systems), you can easily convert it with this [online tool](https://toolslick.com/conversion/text/dos-to-unix).
@@ -28,3 +27,16 @@ You can find additional information on this dataset at [this page](https://githu
 wget https://s3.amazonaws.com/fast-ai-imageclas/imagenette2-160.tgz
 ```
 
+## Cite
+
+If you have found our code and paper useful for your research, please cite our work and star this repo. 
+
+(work in progress): I will update citation upon publication of the final, camera-ready version of our paper, in the ECCV 2024 Proceedings.
+```
+@article{carloni2024connectivity,
+  title={Connectivity-Inspired Network for Context-Aware Recognition},
+  author={Carloni, Gianluca and Colantonio, Sara},
+  journal={},
+  year={2024}
+}
+```
