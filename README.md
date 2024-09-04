@@ -1,4 +1,4 @@
-# CoCoReco-ECCV2024
+# CoCoReco - ECCV 2024
 This is the code base for our **ECCV 2024 paper** "Connectivity-Inspired Network for Context-Aware Recognition" at the *"Human-inspired Computer Vision"* International Workshop, September 29, 2024, Milan.
 
 ### Abstract
