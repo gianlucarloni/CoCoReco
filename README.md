@@ -1,5 +1,5 @@
 # CoCoReco - ECCV 2024
-This is the code base for our **ECCV 2024 paper** "Connectivity-Inspired Network for Context-Aware Recognition" at the *"Human-inspired Computer Vision"* International Workshop, September 29, 2024, Milan.
+This is the code base for our **ECCV 2024 paper** ["**Co**nnectivity-Inspired Network for **Co**ntext-Aware **Reco**gnition"](https://arxiv.org/abs/2409.04360) (CoCoReco) at the *"Human-inspired Computer Vision"* International Workshop, September 29, 2024, Milan.
 
 ### Abstract
 The aim of this paper is threefold. We inform the AI practitioner about the human visual system with an extensive literature review; we propose a novel biologically motivated neural network for image classification; and, finally, we present a new plug-and-play module to model context awareness. We focus on the effect of incorporating circuit motifs found in biological brains to address visual recognition. Our convolutional architecture is inspired by the connectivity of human cortical and subcortical streams, and we implement bottom-up and top-down modulations that mimic the extensive afferent and efferent connections between visual and cognitive areas. Our Contextual Attention Block is simple and effective and can be integrated with any feed-forward neural network. It infers weights that multiply the feature maps according to their causal influence on the scene, modeling the co-occurrence of different objects in the image. We place our module at different bottlenecks to infuse a hierarchical context awareness into the model. We validated our **Co**nnectivity-Inspired **Co**ntext-Aware **Reco**gnition (CoCoReco) network through image classification experiments on benchmark data and found a consistent improvement in performance and the robustness of the produced explanations via class activation.
@@ -36,7 +36,7 @@ If you have found our code and paper useful for your research, please cite our w
 @article{carloni2024connectivity,
   title={Connectivity-Inspired Network for Context-Aware Recognition},
   author={Carloni, Gianluca and Colantonio, Sara},
-  journal={},
+  journal={arXiv preprint arXiv:2409.04360},
   year={2024}
 }
 ```
